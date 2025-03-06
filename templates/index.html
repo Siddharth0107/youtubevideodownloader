@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Loader CSS */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-size: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-top: 6px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center h-screen">
+
+    <h2 class="text-3xl font-bold mb-4">YouTube Video Downloader</h2>
+
+    <form id="downloadForm" class="bg-gray-800 p-6 rounded-lg shadow-md w-96">
+        <input type="text" name="youtube_url" id="youtube_url" placeholder="Enter YouTube URL" required
+            class="w-full p-2 rounded text-black">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded w-full mt-3">
+            Download
+        </button>
+    </form>
+
+    <!-- Loader -->
+    <div id="loader" class="loader-overlay">
+        <div class="spinner"></div>
+        <p id="progressText">Preparing download...</p>
+    </div>
+
+    <!-- Download Link (Hidden Initially) -->
+    <a id="downloadLink" href="#"
+        class="hidden bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded mt-3">Download File</a>
+
+    <script>
+        document.getElementById("downloadForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            let youtubeUrl = document.getElementById("youtube_url").value;
+            if (!youtubeUrl) {
+                alert("Please enter a valid YouTube URL!");
+                return;
+            }
+
+            let loader = document.getElementById("loader");
+            let downloadLink = document.getElementById("downloadLink");
+
+            loader.style.display = "flex"; // Show loader
+            downloadLink.classList.add("hidden"); // Hide download link if it was previously shown
+
+            // Send request to start video download
+            fetch("/start_download", {
+                method: "POST",
+                body: new FormData(event.target)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loader.style.display = "none"; // Hide loader when done
+                    if (data.download_url) {
+                        // Show the download link
+                        downloadLink.href = data.download_url;
+                        downloadLink.classList.remove("hidden");
+                    } else {
+                        alert("Failed to generate download link!");
+                    }
+                })
+                .catch(error => {
+                    loader.style.display = "none";
+                    alert("Error: " + error);
+                });
+        });
+    </script>
+</body>
+
+</html>
